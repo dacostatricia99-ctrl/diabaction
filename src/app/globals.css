@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-canvas text-ink antialiased;
+  }
+  /* Cible tactile minimale accessible. */
+  a,
+  button {
+    @apply outline-none;
+  }
+  :focus-visible {
+    @apply ring-2 ring-primary ring-offset-2 ring-offset-white rounded-sm;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-container px-4 sm:px-6;
+  }
+  .btn {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold transition-colors;
+  }
+  .btn-primary {
+    @apply btn bg-primary text-white hover:bg-primary-hover;
+  }
+  .btn-accent {
+    @apply btn bg-accent text-white hover:bg-accent-hover;
+  }
+  .btn-outline {
+    @apply btn border border-line bg-white text-ink hover:bg-canvas;
+  }
+  .card {
+    @apply rounded-card bg-white shadow-card;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  .badge-success {
+    @apply badge bg-success-soft text-success;
+  }
+  .badge-muted {
+    @apply badge bg-canvas text-ink/70;
+  }
+}
+
+/* Respect de l'utilisateur : réduit les animations si demandé. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

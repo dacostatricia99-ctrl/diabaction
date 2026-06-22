@@ -1,0 +1,475 @@
+// Schéma Prisma — Diabaction Congo
+// Voir docs/02-modele-de-donnees.md. PostgreSQL + PostGIS.
+// Les colonnes geography(Point,4326) sont gérées via SQL brut (PostGIS) :
+// ici la géo est stockée en lat/lng simples, exploitables par ST_* via vues/raw queries.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────── Référentiel géographique ───────────────────────────
+
+model Department {
+  id        String   @id @default(uuid())
+  name      String
+  code      String?  @unique
+  cities    City[]
+  metrics   Metric[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("departments")
+}
+
+model City {
+  id           String   @id @default(uuid())
+  name         String
+  departmentId String   @map("department_id")
+  department   Department @relation(fields: [departmentId], references: [id])
+  lat          Float?
+  lng          Float?
+  centers      Center[]
+  requests     MembershipRequest[]
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  @@map("cities")
+}
+
+// ─────────────────────────────────── Centres ────────────────────────────────────
+
+enum CoverageLevel {
+  complete
+  partielle
+  orientation
+}
+
+model Center {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  name            String
+  description     String?
+  address         String?
+  cityId          String?  @map("city_id")
+  city            City?    @relation(fields: [cityId], references: [id])
+  lat             Float?
+  lng             Float?
+  phone           String?
+  whatsapp        String?
+  email           String?
+  openingHours    Json?    @map("opening_hours")
+  photos          Json?
+  coverageLevel   CoverageLevel @default(partielle) @map("coverage_level")
+  handlesChildren Boolean  @default(false) @map("handles_children")
+  services        CenterService[]
+  products        CenterProduct[]
+  programs        ProgramCenter[]
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+
+  @@map("centers")
+}
+
+model Service {
+  id        String   @id @default(uuid())
+  name      String
+  icon      String?
+  centers   CenterService[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("services")
+}
+
+model CenterService {
+  id        String  @id @default(uuid())
+  centerId  String  @map("center_id")
+  serviceId String  @map("service_id")
+  center    Center  @relation(fields: [centerId], references: [id])
+  service   Service @relation(fields: [serviceId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@unique([centerId, serviceId])
+  @@map("center_services")
+}
+
+model CenterProduct {
+  id        String  @id @default(uuid())
+  centerId  String  @map("center_id")
+  productId String  @map("product_id")
+  status    ProductStatus @default(disponible)
+  center    Center  @relation(fields: [centerId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@unique([centerId, productId])
+  @@map("center_products")
+}
+
+// ────────────────────────────────── Événements ──────────────────────────────────
+
+enum EventType {
+  depistage
+  caravane
+  conference
+  activite_physique
+  journee_mondiale
+  camp_ete
+  atelier_educatif
+}
+
+enum EventStatus {
+  brouillon
+  publie
+  termine
+  annule
+}
+
+model EventCategory {
+  id        String   @id @default(uuid())
+  name      String
+  type      EventType
+  events    Event[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("event_categories")
+}
+
+model Event {
+  id            String   @id @default(uuid())
+  slug          String   @unique
+  title         String
+  description   String?
+  categoryId    String?  @map("category_id")
+  category      EventCategory? @relation(fields: [categoryId], references: [id])
+  type          EventType
+  startsAt      DateTime @map("starts_at")
+  endsAt        DateTime? @map("ends_at")
+  locationLabel String?  @map("location_label")
+  lat           Float?
+  lng           Float?
+  organizer     String?
+  phone         String?
+  capacity      Int?
+  status        EventStatus @default(brouillon)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  @@map("events")
+}
+
+// ──────────────────────────── Produits & ressources ─────────────────────────────
+
+enum ProductCategory {
+  insuline
+  bandelettes
+  glucometres
+  aiguilles
+  consommables
+}
+
+enum ProductStatus {
+  disponible
+  stock_limite
+  indisponible
+}
+
+model Product {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  name            String
+  category        ProductCategory
+  photoUrl        String?  @map("photo_url")
+  description     String?
+  status          ProductStatus @default(disponible)
+  indicativePrice Decimal? @map("indicative_price") @db.Decimal(10, 2)
+  accessConditions String? @map("access_conditions")
+  memberBenefit   String?  @map("member_benefit")
+  centers         CenterProduct[]
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+  // NB: aucune colonne de quantité — on n'affiche jamais le stock exact.
+
+  @@map("products")
+}
+
+enum ResourceFormat {
+  article
+  video
+  infographie
+  pdf
+}
+
+enum ResourceCategory {
+  nutrition
+  activite_physique
+  prevention_complications
+  diabete_gestationnel
+  diabete_enfant
+  sante_mentale
+}
+
+model EducationalResource {
+  id               String   @id @default(uuid())
+  slug             String   @unique
+  title            String
+  category         ResourceCategory
+  format           ResourceFormat
+  summary          String?
+  body             String?
+  mediaUrl         String?  @map("media_url")
+  coverUrl         String?  @map("cover_url")
+  isProfessional   Boolean  @default(false) @map("is_professional")
+  availableOffline Boolean  @default(false) @map("available_offline")
+  publishedAt      DateTime? @map("published_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  deletedAt        DateTime? @map("deleted_at")
+
+  @@map("educational_resources")
+}
+
+// ───────────────────────────── Programme enfants ────────────────────────────────
+
+model ChildrenProgram {
+  id                  String   @id @default(uuid())
+  slug                String   @unique
+  title               String
+  presentation        String?
+  eligibilityCriteria String?  @map("eligibility_criteria")
+  includedServices    String?  @map("included_services")
+  registrationProcedure String? @map("registration_procedure")
+  requiredDocuments   Json?    @map("required_documents")
+  faq                 Json?
+  notice              String   @default("Programme national avec une capacité renforcée à Brazzaville.")
+  centers             ProgramCenter[]
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  deletedAt           DateTime? @map("deleted_at")
+
+  @@map("children_programs")
+}
+
+model ProgramCenter {
+  id        String @id @default(uuid())
+  programId String @map("program_id")
+  centerId  String @map("center_id")
+  program   ChildrenProgram @relation(fields: [programId], references: [id])
+  center    Center @relation(fields: [centerId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@unique([programId, centerId])
+  @@map("program_centers")
+}
+
+// ──────────────────────────────── Adhésions ─────────────────────────────────────
+
+enum RequestStatus {
+  nouvelle
+  en_traitement
+  acceptee
+  refusee
+}
+
+enum MembershipStatus {
+  en_attente
+  active
+  expiree
+  rejetee
+}
+
+model MembershipRequest {
+  id          String   @id @default(uuid())
+  lastName    String   @map("last_name")
+  firstName   String   @map("first_name")
+  phone       String
+  email       String?
+  cityId      String?  @map("city_id")
+  city        City?    @relation(fields: [cityId], references: [id])
+  comment     String?
+  status      RequestStatus @default(nouvelle)
+  processedBy String?  @map("processed_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  @@map("membership_requests")
+}
+
+model Membership {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  status    MembershipStatus @default(en_attente)
+  startedAt DateTime? @map("started_at")
+  expiresAt DateTime? @map("expires_at")
+  feeAmount Decimal? @map("fee_amount") @db.Decimal(10, 2)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("memberships")
+}
+
+// ───────────────────────────── Utilisateurs & RBAC ──────────────────────────────
+
+model User {
+  id              String   @id @default(uuid())
+  email           String?  @unique
+  phone           String?
+  fullName        String?  @map("full_name")
+  passwordHash    String?  @map("password_hash")
+  emailVerifiedAt DateTime? @map("email_verified_at")
+  lastLoginAt     DateTime? @map("last_login_at")
+  roles           UserRole[]
+  memberships     Membership[]
+  auditLogs       AuditLog[]
+  partner         Partner?
+  pushSubs        PushSubscription[]
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  name        String
+  isSystem    Boolean  @default(true) @map("is_system")
+  users       UserRole[]
+  permissions RolePermission[]
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  description String?
+  roles       RolePermission[]
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  @@map("permissions")
+}
+
+model UserRole {
+  id        String @id @default(uuid())
+  userId    String @map("user_id")
+  roleId    String @map("role_id")
+  user      User   @relation(fields: [userId], references: [id])
+  role      Role   @relation(fields: [roleId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  id           String @id @default(uuid())
+  roleId       String @map("role_id")
+  permissionId String @map("permission_id")
+  role         Role   @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// ───────────────────────── Partenaires, indicateurs, audit ──────────────────────
+
+model Partner {
+  id           String   @id @default(uuid())
+  name         String
+  type         String?
+  sector       String?
+  status       String   @default("actif") // "actif" | "suspendu"
+  logoUrl      String?  @map("logo_url")
+  contactEmail String?  @map("contact_email")
+  userId       String?  @unique @map("user_id")
+  user         User?    @relation(fields: [userId], references: [id])
+  since        DateTime @default(now()) // début du partenariat
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  @@map("partners")
+}
+
+model Metric {
+  id           String   @id @default(uuid())
+  key          String
+  periodStart  DateTime @map("period_start") @db.Date
+  periodEnd    DateTime @map("period_end") @db.Date
+  departmentId String?  @map("department_id")
+  department   Department? @relation(fields: [departmentId], references: [id])
+  value        Decimal
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  @@unique([key, periodStart, periodEnd, departmentId])
+  @@map("metrics")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String?  @map("actor_id")
+  actor     User?    @relation(fields: [actorId], references: [id])
+  action    String
+  entity    String
+  entityId  String?  @map("entity_id")
+  changes   Json?
+  ip        String?
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("audit_logs")
+}
+
+model PushSubscription {
+  id         String   @id @default(uuid())
+  userId     String?  @map("user_id")
+  user       User?    @relation(fields: [userId], references: [id])
+  endpoint   String   @unique
+  keys       Json
+  department String?  // ciblage géographique optionnel
+  topics     String[] @default([]) // ciblage par programme (ex. "enfants")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  deletedAt  DateTime? @map("deleted_at")
+
+  @@map("push_subscriptions")
+}

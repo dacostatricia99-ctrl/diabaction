@@ -1,0 +1,23 @@
+{
+  "name": "Diabaction Congo",
+  "short_name": "Diabaction",
+  "description": "Ensemble contre le diabète en République du Congo : centres, dépistages, programme enfants, ressources.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F7FA",
+  "theme_color": "#1F4E79",
+  "categories": ["health", "medical", "education"],
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Trouver un centre", "url": "/centres" },
+    { "name": "Dépistages", "url": "/evenements" },
+    { "name": "Contact", "url": "/contact" }
+  ]
+}

@@ -1,0 +1,25 @@
+# PostgreSQL + PostGIS pour Diabaction Congo.
+# Démarrer : docker compose up -d
+# La base est exposée sur localhost:5432 (voir DATABASE_URL dans .env).
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: diabaction-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: diabaction
+      POSTGRES_PASSWORD: diabaction
+      POSTGRES_DB: diabaction
+    ports:
+      - "5432:5432"
+    volumes:
+      - diabaction_pgdata:/var/lib/postgresql/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U diabaction -d diabaction"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  diabaction_pgdata:

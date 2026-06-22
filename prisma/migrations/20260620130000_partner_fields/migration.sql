@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "partners" ADD COLUMN     "sector" TEXT,
+ADD COLUMN     "since" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "status" TEXT NOT NULL DEFAULT 'actif',
+ADD COLUMN     "type" TEXT;
+
