@@ -1,0 +1,34 @@
+# Blueprint Render — déploiement en un clic (web Docker + PostgreSQL managé).
+# https://render.com/docs/blueprint-spec
+# NB : le schéma n'utilise pas PostGIS → un PostgreSQL standard suffit.
+
+databases:
+  - name: diabaction-db
+    databaseName: diabaction
+    user: diabaction
+    plan: free # 90 jours en gratuit ; passer à un plan payant pour la prod
+
+services:
+  - type: web
+    name: diabaction
+    runtime: docker
+    plan: free
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: DB_ENABLED
+        value: "true"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: diabaction-db
+          property: connectionString
+      - key: AUTH_SECRET
+        generateValue: true # secret de session généré automatiquement
+      - key: VAPID_SUBJECT
+        value: mailto:contact@diabaction.cg
+      # Secrets push à renseigner dans le dashboard (npx web-push generate-vapid-keys).
+      # NEXT_PUBLIC_VAPID_PUBLIC_KEY est aussi passée comme build-arg Docker par Render.
+      - key: NEXT_PUBLIC_VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
