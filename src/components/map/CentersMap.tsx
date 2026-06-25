@@ -10,7 +10,7 @@ import type { Center } from "@/data/demo";
 // Pin SVG de marque (bleu par défaut, rouge pour le centre actif) — évite les
 // images de marqueur par défaut de Leaflet (problème de bundling) et reste léger.
 function pinIcon(active: boolean) {
-  const color = active ? "#D94B5A" : "#1F4E79";
+  const color = active ? "#E41E26" : "#1B3FA8";
   return L.divIcon({
     className: "",
     html: `<svg width="30" height="40" viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
@@ -83,7 +83,7 @@ export default function CentersMap({ centers, selectedSlug, userPosition }: Prop
           <Popup>
             <strong className="block text-[13px]">{c.name}</strong>
             <span className="text-[12px] text-gray-600">{c.address}</span>
-            <Link href={`/centres/${c.slug}`} className="mt-1 block text-[12px] font-semibold text-[#1F4E79]">
+            <Link href={`/centres/${c.slug}`} className="mt-1 block text-[12px] font-semibold text-primary">
               Voir la fiche →
             </Link>
           </Popup>

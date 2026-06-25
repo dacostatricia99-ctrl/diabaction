@@ -1,17 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" rx="96" fill="#F5F7FA"/>
-  <g transform="translate(256 256) scale(8) translate(-24 -24)">
-    <g fill="none" stroke="#1F4E79" stroke-width="2.5" stroke-linejoin="round">
-      <circle cx="24" cy="24" r="14"/>
-      <line x1="38" y1="24" x2="45" y2="24" stroke-linecap="round"/>
-      <line x1="33.9" y1="33.9" x2="38.8" y2="38.8" stroke-linecap="round"/>
-      <line x1="24" y1="38" x2="24" y2="45" stroke-linecap="round"/>
-      <line x1="14.1" y1="33.9" x2="9.2" y2="38.8" stroke-linecap="round"/>
-      <line x1="10" y1="24" x2="3" y2="24" stroke-linecap="round"/>
-      <line x1="14.1" y1="14.1" x2="9.2" y2="9.2" stroke-linecap="round"/>
-      <line x1="24" y1="10" x2="24" y2="3" stroke-linecap="round"/>
-      <line x1="33.9" y1="14.1" x2="38.8" y2="9.2" stroke-linecap="round"/>
-    </g>
-    <path d="M24 15c3.6 4 6 7 6 10a6 6 0 1 1-12 0c0-3 2.4-6 6-10z" fill="#D94B5A"/>
-  </g>
+  <rect width="512" height="512" rx="112" fill="#FFFFFF"/>
+  <!-- Cadre octogonal bleu -->
+  <polygon points="431,329 329,431 183,431 81,329 81,183 183,81 329,81 431,183"
+           fill="none" stroke="#1B3FA8" stroke-width="22" stroke-linejoin="round"/>
+  <!-- Emblème rouge/blanc (swirl) -->
+  <circle cx="256" cy="256" r="120" fill="#E41E26"/>
+  <path d="M256 136 a120 120 0 0 1 0 240 a60 60 0 0 1 0 -120 a60 60 0 0 0 0 -120 Z" fill="#FFFFFF"/>
+  <circle cx="256" cy="196" r="22" fill="#E41E26"/>
+  <circle cx="256" cy="316" r="22" fill="#FFFFFF"/>
 </svg>

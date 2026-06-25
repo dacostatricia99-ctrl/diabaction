@@ -11,14 +11,14 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#1F4E79",
-          hover: "#1A4268",
-          soft: "#E8EEF5",
+          DEFAULT: "#1B3FA8", // bleu royal du logo (vif)
+          hover: "#15327F",
+          soft: "#E7ECFA",
         },
         accent: {
-          DEFAULT: "#D94B5A",
-          hover: "#C53D4C",
-          soft: "#FBE9EB",
+          DEFAULT: "#E41E26", // rouge éclatant du logo
+          hover: "#C0161D",
+          soft: "#FDE7E8",
         },
         ink: "#2D3748",
         canvas: "#F5F7FA",
